@@ -4,7 +4,7 @@
 
 ### Controls
 
-**Up**: Thrust
+**Up**: Thrust (It may take some time to overcome gravity)
 
 **Left**: Turn left
 
