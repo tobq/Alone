@@ -1,0 +1,86 @@
+﻿<!doctype html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!--<link rel="stylesheet" href="main.css">-->
+	<style>
+		body, html, canvas {
+			margin: 0px;
+			padding: 0px;
+			height: 100%;
+			width: 100%;
+			display: block;
+			-ms-content-zooming: none;
+			-ms-touch-action: none;
+			-ms-overflow-style: none;
+			touch-action: none;
+			background-color: #111;
+		}
+
+		.row {
+			display: inline-block;
+			width: 100%;
+		}
+
+		.angle {
+			position: relative;
+			width: 2.777%;
+			display: inline-block;
+			font-family: arial;
+			font-size: 9px;
+			text-align: center;
+			color: white;
+		}
+
+			.angle:before {
+				display: block;
+				content: "";
+				margin: 10px auto;
+				width: 1px;
+				height: 10px;
+				background: white;
+			}
+
+		.bearing {
+			font-size: 14px;
+			font-weight: 700;
+			color: #8ff5ff;
+		}
+
+			.bearing:before {
+				width: 3px;
+			}
+
+		#compass {
+			position: fixed;
+			top: 0px;
+			left: 0px;
+			right: 0px;
+			white-space: nowrap;
+			overflow: hidden;
+			padding-bottom: 30px;
+			background-image: url(up.svg);
+			background-repeat: no-repeat;
+			background-position: center bottom;
+		}
+
+		#slider {
+			position: relative;
+		}
+	</style>
+</head>
+<body>
+	<div id="compass">
+		<div id="slider">
+			<div class="row"></div><div class="row"></div>
+		</div>
+	</div>
+	<canvas></canvas>
+	<script src="objects.js"></script>
+	<script src="main.js"></script>
+</body>
+</html>
