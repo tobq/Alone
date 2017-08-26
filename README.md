@@ -1,14 +1,14 @@
 # Alone
-[Massive](https://cdn.rawgit.com/tobq/Alone/69bd923e/index.html)
+[Massive](https://cdn.rawgit.com/tobq/Alone/24e177e1/index.html)
 
 
 ### Controls
 
-**Up**: Thrust (It may take some time to overcome gravity)
+**Up**: Thrust 
 
 **Left**: Turn left
 
 **Right**: Turn right
 
 
-**Scroll**: Zoom
+**Scroll**: Zoom - *You'll want to do this*
