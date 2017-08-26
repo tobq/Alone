@@ -74,6 +74,13 @@ vec2.prototype.ceil = function () {
 	return this;
 };
 
+vec2.prototype.perp = function () {
+	a = this.x;
+	this.x = this.y;
+	this.y = -a;
+	return this;
+};
+
 vec2.prototype.random = function () {
 	this.x *= Math.random();
 	this.y *= Math.random();
@@ -86,6 +93,10 @@ vec2.prototype.bound = function (component, min, max) {
 	else return true;
 };
 
+vec2.prototype.angle = function (vec) {
+	return Math.acos(this.dot(vec) / (this.mag() * vec.mag()));
+};
+
 /** @constructor */
 function Particle(opts) {
 	if (!opts) opts = {};
@@ -94,7 +105,7 @@ function Particle(opts) {
 	this.velocity = opts.velocity || new vec2(0, 0);
 	this.density = opts.density || 1;
 	this.diameter = this.radius * 2;
-	this.mass = this.radius * this.radius * this.density;
+	this.mass = this.radius * this.radius * this.radius * this.density;
 	this.coords = opts.coords || new vec2(500, 500).random().subtract(Sun.coords);
 	World.objects.push(this);
 }
@@ -103,4 +114,9 @@ Particle.prototype.momentum = function () {
 };
 Particle.prototype.energy = function () {
 	return this.velocity.dot(this.velocity) * this.mass / 2;
+};
+
+Particle.prototype.orbit = function (part, ACW) {
+	var diff = this.coords.copy().subtract(part.coords);
+	this.velocity = part.velocity.copy().add(diff.perp().unit().sMultiply(Math.sqrt(part.mass * World.G / diff.mag()) * (ACW ? 1 : -1)));
 };
