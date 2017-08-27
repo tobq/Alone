@@ -42,10 +42,10 @@ function elapse() {
 		for (var j = i; j--;) {
 			var opar = World.objects[j],
 				rv = par.coords.copy().subtract(opar.coords),
-				r2 = rv.dot(rv),
-				ru = rv.unit(),
-				d2 = (par.radius + opar.radius) * (par.radius + opar.radius);
+				r2 = rv.dot(rv);
 			if (r2) {
+				var d2 = (par.radius + opar.radius) * (par.radius + opar.radius),
+					ru = rv.unit();
 				if (r2 < d2) {
 					if (par.velocity.x || par.velocity.y || opar.velocity.x || opar.velocity.y) {
 						var n1d = ru.copy().sMultiply(2 * par.velocity.dot(ru)),
@@ -60,7 +60,7 @@ function elapse() {
 					opar.coords.subtract(factor.sMultiply(par.mass));
 				} else if (r2 !== d2) {
 					par.velocity.subtract(ru.copy().sMultiply(World.G * opar.mass / r2));
-					opar.velocity.add(ru.copy().sMultiply(World.G * par.mass / r2));
+					opar.velocity.add(ru.sMultiply(World.G * par.mass / r2));
 				}
 			}
 		}
@@ -136,16 +136,16 @@ moon.orbit(earth, false, 3.84405E8);
 
 var player = new Particle({
 	radius: 56,
-	coords: new vec2(earth.radius + 11, 0),
+	coords: earth.coords.copy().add(new vec2(earth.radius + 57, 0))
 });
-player.orbit(earth, true, earth.radius + 100, 0);
+player.velocity = earth.velocity.copy();
 player.angle = 0;
 player.thrust = 3 * earth.gravity();
 player.agility = 0.05;
 player.isPlayer = true;
 
-for (var i = 500, rWidth = earth.radius; i--;) new Particle({
-	radius: 50000 + Math.ceil(Math.random() * 100000),
+for (var i = 500, rWidth = earth.diameter * 5; i--;) new Particle({
+	radius: 20000 + Math.ceil(Math.random() * 50000),
 }).orbit(earth, false, earth.diameter * 5 + Math.random() * rWidth);
 
 var row = document.getElementsByClassName("row"),

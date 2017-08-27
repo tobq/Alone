@@ -151,5 +151,5 @@ Particle.prototype.orbit = function (part, ACW, radius, angle) {
 
 
 Particle.prototype.gravity = function () {
-	return World.G * this.mass / this.radius ** 2;
+	return World.G * this.mass / (this.radius * this.radius);
 };
