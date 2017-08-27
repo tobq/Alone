@@ -144,7 +144,7 @@ player.thrust = 3 * earth.gravity();
 player.agility = 0.05;
 player.isPlayer = true;
 
-for (var i = 500, rWidth = earth.diameter * 5; i--;) new Particle({
+for (var i = 50, rWidth = earth.diameter * 5; i--;) new Particle({
 	radius: 20000 + Math.ceil(Math.random() * 50000),
 }).orbit(earth, false, earth.diameter * 5 + Math.random() * rWidth);
 

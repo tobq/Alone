@@ -1,5 +1,5 @@
 # Alone
-[Massive](https://cdn.rawgit.com/tobq/Alone/45f83822/index.html)
+[Massive](https://rawgit.com/tobq/Alone/master/index.html)
 
 
 ### Controls
