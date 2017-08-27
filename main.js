@@ -1,4 +1,5 @@
 var canvas = document.getElementsByTagName("canvas")[0],
+	speedCount = document.getElementById("speed"),
 	c = canvas.getContext("2d"),
 	requestFrame = window.requestAnimationFrame ||
 		window.webkitRequestAnimationFrame ||
@@ -20,8 +21,10 @@ function an() {
 		if (part.isPlayer) {
 			c.save();
 			c.rotate(part.angle + Math.PI / 2);
-			if (CONTROLS.keysDown[38]) c.drawImage(SPRITES.flame, -part.radius, 8 - part.radius, part.diameter, part.diameter * 2);
-			c.drawImage(SPRITES.ship, -part.radius, -part.radius, part.diameter, part.diameter);
+			if (CONTROLS.keysDown[38]) c.drawImage(SPRITES.flame, -part.radius, -80 + part.radius, part.diameter, part.diameter * 2);
+			c.drawImage(SPRITES.ship, -part.radius, -80 - part.radius, part.diameter, part.diameter * 2);
+			c.fillStyle = "red"
+			c.arc(0, 0, part.radius, 0, 2 * Math.PI);
 			c.restore();
 		}
 		else {
@@ -61,13 +64,14 @@ function elapse() {
 				}
 			}
 		}
-		par.coords.add(par.velocity);
+		par.coords.add(par.velocity.copy().sDivide(World.INTERVALS));
 		par.velocity.sMultiply(World.smoothness);
 	}
 	if (CONTROLS.keysDown[37]) player.angle -= player.agility;
-	if (CONTROLS.keysDown[38]) player.velocity.add(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.speed));
+	if (CONTROLS.keysDown[38]) player.velocity.add(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.thrust));
 	if (CONTROLS.keysDown[39]) player.angle += player.agility;
 	slider.style.right = ((100 * ((player.angle - Math.PI / 2) / 2 / Math.PI % 1 + 1) + 1.3888) % 100) + "%";
+	speedCount.textContent = Math.round(player.velocity.copy().subtract(earth.velocity).mag());
 }
 window.onresize = function () {
 	canvas.width = window.innerWidth;
@@ -101,37 +105,48 @@ var World = {
 	smoothness: 1,
 	rebound: -1,
 	objects: [],
-	G: 0.011
+	G: 6.67408E-11,
+	INTERVALS: 60
 };
-var earth = new Particle({
-	radius: 6371,
-	density: 1,
-	coords: new vec2(100, 100)
-});
-var r = 384405,
+var sun = new Particle({
+	radius: 6.95700E8,
+	coords: new vec2(0, 0),
+	density: 1.408E3,
+	colour: "yellow"
+}),
+	earth = new Particle({
+		radius: 6.371E6,
+		density: 5.514E3,
+		colour: "#4E71B2"
+	}),
+	venus = new Particle({
+		radius: 6.0518E6,
+		density: 5.243E3,
+		colour: "orange"
+	}),
 	moon = new Particle({
-		radius: 1738,
-		coords: new vec2(0, r)
+		radius: 1.737E6,
+		density: 3.344E3,
+		colour: "grey"
 	});
-moon.orbit(earth);
+earth.orbit(sun, false, 1.496E11);
+venus.orbit(sun, false, 1.0821E11);
+moon.orbit(earth, false, 3.84405E8);
+
 
 var player = new Particle({
-	radius: 10,
-	coords: new vec2(earth.radius + 40000, 0),
+	radius: 56,
+	coords: new vec2(earth.radius + 11, 0),
 });
-player.orbit(earth);
+player.orbit(earth, true, earth.radius + 100, 0);
 player.angle = 0;
-player.speed = 10;
+player.thrust = 3 * earth.gravity();
 player.agility = 0.05;
 player.isPlayer = true;
 
-for (var i = 1000, rWidth = 50000; i--;) {
-	var r = earth.diameter * 4 + Math.random() * rWidth;
-	new Particle({
-		radius: 5 + Math.ceil(Math.random() * 10),
-		coords: new vec2(Math.cos(a), Math.sin(a)).sMultiply(r),
-	}).orbit(earth);
-}
+for (var i = 500, rWidth = earth.radius; i--;) new Particle({
+	radius: 50000 + Math.ceil(Math.random() * 100000),
+}).orbit(earth, false, earth.diameter * 5 + Math.random() * rWidth);
 
 var row = document.getElementsByClassName("row"),
 	slider = document.getElementById("slider");
@@ -140,7 +155,7 @@ for (var j = 2; j--;) {
 	for (var k = 0; k < 4; k++) {
 		var a = document.createElement("div");
 		a.className = "angle bearing";
-		a.textContent = ["N", "E", "S", "W"][k];
+		a.textContent = ["W", "N", "E", "S"][k];
 		row[j].appendChild(a);
 		while (i++ < k * 9 + 8) {
 			var a = document.createElement("div");
@@ -154,4 +169,4 @@ for (var j = 2; j--;) {
 
 onresize();
 requestFrame(an);
-setInterval(elapse, 1000 / 30);
+setInterval(elapse, 1000 / World.INTERVALS);
