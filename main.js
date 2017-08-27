@@ -59,8 +59,8 @@ function elapse() {
 					par.coords.add(factor.copy().sMultiply(opar.mass));
 					opar.coords.subtract(factor.sMultiply(par.mass));
 				} else if (r2 !== d2) {
-					par.velocity.subtract(ru.copy().sMultiply(World.G * opar.mass / r2));
-					opar.velocity.add(ru.sMultiply(World.G * par.mass / r2));
+					par.velocity.subtract(ru.copy().sMultiply(World.G * opar.mass / r2 / World.INTERVALS));
+					opar.velocity.add(ru.sMultiply(World.G * par.mass / r2 / World.INTERVALS));
 				}
 			}
 		}
@@ -68,7 +68,7 @@ function elapse() {
 		par.velocity.sMultiply(World.smoothness);
 	}
 	if (CONTROLS.keysDown[37]) player.angle -= player.agility;
-	if (CONTROLS.keysDown[38]) player.velocity.add(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.thrust));
+	if (CONTROLS.keysDown[38]) player.velocity.add(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.thrust / World.INTERVALS));
 	if (CONTROLS.keysDown[39]) player.angle += player.agility;
 	slider.style.right = ((100 * ((player.angle - Math.PI / 2) / 2 / Math.PI % 1 + 1) + 1.3888) % 100) + "%";
 	speedCount.textContent = Math.round(player.velocity.copy().subtract(earth.velocity).mag());
@@ -138,15 +138,15 @@ var player = new Particle({
 	radius: 56,
 	coords: earth.coords.copy().add(new vec2(earth.radius + 57, 0))
 });
-player.velocity = earth.velocity.copy();
+player.orbit(earth);
 player.angle = 0;
 player.thrust = 3 * earth.gravity();
 player.agility = 0.05;
 player.isPlayer = true;
 
-for (var i = 50, rWidth = earth.diameter * 5; i--;) new Particle({
+for (var i = 50; i--;) new Particle({
 	radius: 20000 + Math.ceil(Math.random() * 50000),
-}).orbit(earth, false, earth.diameter * 5 + Math.random() * rWidth);
+}).orbit(earth, false, earth.diameter * (4 + 6 * Math.random()));
 
 var row = document.getElementsByClassName("row"),
 	slider = document.getElementById("slider");
