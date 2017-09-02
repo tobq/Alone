@@ -21,8 +21,8 @@ function an() {
 		if (part.isPlayer) {
 			c.save();
 			c.rotate(part.angle + Math.PI / 2);
-			if (CONTROLS.keysDown[38]) c.drawImage(SPRITES.flame, -part.radius, -80 + part.radius, part.diameter, part.diameter * 2);
-			c.drawImage(SPRITES.ship, -part.radius, -80 - part.radius, part.diameter, part.diameter * 2);
+			if (CONTROLS.keysDown[38]) c.drawImage(SPRITES.flame, -part.radius, -0.4107142857142858 * part.radius, part.diameter, part.diameter * 2);
+			c.drawImage(SPRITES.ship, -part.radius, -2.4107142857142858 * part.radius, part.diameter, part.diameter * 2);
 			c.fillStyle = "red"
 			c.arc(0, 0, part.radius, 0, 2 * Math.PI);
 			c.restore();
@@ -67,9 +67,9 @@ function elapse() {
 		par.coords.add(par.velocity.copy().sDivide(World.INTERVALS));
 		par.velocity.sMultiply(World.smoothness);
 	}
-	if (CONTROLS.keysDown[37]) player.angle -= player.agility;
+	if (CONTROLS.keysDown[37]) player.angle -= player.agility / World.INTERVALS;
 	if (CONTROLS.keysDown[38]) player.velocity.add(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.thrust / World.INTERVALS));
-	if (CONTROLS.keysDown[39]) player.angle += player.agility;
+	if (CONTROLS.keysDown[39]) player.angle += player.agility / World.INTERVALS;
 	slider.style.right = ((100 * ((player.angle - Math.PI / 2) / 2 / Math.PI % 1 + 1) + 1.3888) % 100) + "%";
 	speedCount.textContent = Math.round(player.velocity.copy().subtract(earth.velocity).mag());
 }
@@ -136,17 +136,18 @@ moon.orbit(earth, false, 3.84405E8);
 
 var player = new Particle({
 	radius: 56,
-	coords: earth.coords.copy().add(new vec2(earth.radius + 57, 0))
+	coords: earth.coords.copy().add(new vec2(earth.radius + 56, 0))
 });
-player.orbit(earth);
+player.velocity = earth.velocity.copy();
 player.angle = 0;
-player.thrust = 3 * earth.gravity();
-player.agility = 0.05;
+player.thrust = 4 * earth.gravity();
+player.agility = 0.5;
 player.isPlayer = true;
 
-for (var i = 50; i--;) new Particle({
-	radius: 20000 + Math.ceil(Math.random() * 50000),
-}).orbit(earth, false, earth.diameter * (4 + 6 * Math.random()));
+for (var i = 100; i--;) new Particle({
+	radius: 100 * (40 + Math.ceil(Math.random() * 20)),
+	density: 3.344E3,
+}).orbit(earth, false, 6550E3 + 35786E3 * Math.random());
 
 var row = document.getElementsByClassName("row"),
 	slider = document.getElementById("slider");
