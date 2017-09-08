@@ -6,6 +6,85 @@ var canvas = document.getElementsByTagName("canvas")[0],
 		window.mozRequestAnimationFrame ||
 		(cb => window.setTimeout(cb, 1000 / 30));
 
+function onNeighbour(part, opart) {
+	var part = World.objects[i];
+	var opart = World.objects[j],
+		rv = part.coords.copy().subtract(opart.coords),
+		r2 = rv.dot(rv);
+	if (r2) {
+		var d2 = (part.radius + opart.radius) * (part.radius + opart.radius),
+			ru = rv.unit();
+		if (r2 < d2) {
+			if (part.velocity.x || part.velocity.y || opart.velocity.x || opart.velocity.y) {
+				var n1d = ru.copy().sMultiply(2 * part.velocity.dot(ru)),
+					n2 = ru.copy().sMultiply(opart.velocity.dot(ru)),
+					v2 = n1d.copy().sMultiply(part.mass).add(n2.copy().sMultiply(opart.mass - part.mass)).sDivide(opart.mass + part.mass);
+
+				part.velocity.add(v2).add(n2).subtract(n1d);
+				opart.velocity.add(v2).subtract(n2);
+			}
+			var factor = ru.sMultiply((part.radius + opart.radius - Math.sqrt(r2)) / (part.mass + opart.mass));
+			part.coords.add(factor.copy().sMultiply(opart.mass));
+			opart.coords.subtract(factor.sMultiply(part.mass));
+		}
+	}
+}
+
+function System() {
+	this.objects = [];
+	this.spart = new Spart(onNeighbour);
+	this.COM = null; // vec2 : Centre of mass
+}
+System.prototype.add = function (opts) {
+	var part = new Particle(opts);
+	this.objects.push(part);
+	this.spart.add(part, part.diameter, part.diameter);
+}
+System.prototype.setup = function (vec) {
+	var total = this.objects.length;
+	this.mass = 0;
+	this.coords = new vec2(0, 0);
+	for (var i = total; i--;) {
+		var part = this.objects[i];
+		if (part.constructor === System) {
+			var ret = part.setup();
+			if (ret) this.coords.add(part.coords);
+			total += ret;
+		}
+		else {
+			this.coords.add(part.coords);
+			total++;
+		}
+		this.mass += part.mass;
+	}
+	if (total) this.coords.sDivide(total);
+	return total;
+}
+System.prototype.acc = function (vec) {
+	for (var i = this.objects.length; i--;) this.objects[i].acc(vec);
+}
+Particle.prototype.acc = function (vec) {
+	this.velocity.add(vec);
+}
+System.prototype.elapse = function () {
+	for (var i = this.objects.length; i--;) {
+		var part = this.objects[i];
+		part.elapse();
+		for (var j = i; j--;) {
+			var opart = this.objects[j],
+				rv = part.coords.copy().subtract(opart.coords),
+				r2 = rv.dot(rv),
+				ru = rv.unit();
+			ru = part.coords.copy().subtract(opart.coords).unit();
+			part.acc(ru.copy().sMultiply(-World.G * opart.mass / r2 / World.INTERVALS));
+			opart.acc(ru.sMultiply(World.G * part.mass / r2 / World.INTERVALS));
+		}
+	}
+}
+Particle.prototype.elapse = function () {
+	this.coords.add(this.velocity);
+}
+
 function sign() {
 	return Math.random() > 0.5 ? 1 : -1;
 }
@@ -37,42 +116,45 @@ function an() {
 	requestFrame(an);
 }
 function elapse() {
-	for (var i = World.objects.length; i--;) {
-		var par = World.objects[i];
-		for (var j = i; j--;) {
-			var opar = World.objects[j],
-				rv = par.coords.copy().subtract(opar.coords),
-				r2 = rv.dot(rv);
-			if (r2) {
-				var d2 = (par.radius + opar.radius) * (par.radius + opar.radius),
-					ru = rv.unit();
-				if (r2 < d2) {
-					if (par.velocity.x || par.velocity.y || opar.velocity.x || opar.velocity.y) {
-						var n1d = ru.copy().sMultiply(2 * par.velocity.dot(ru)),
-							n2 = ru.copy().sMultiply(opar.velocity.dot(ru)),
-							v2 = n1d.copy().sMultiply(par.mass).add(n2.copy().sMultiply(opar.mass - par.mass)).sDivide(opar.mass + par.mass);
+	World.system.setup();
+	World.system.elapse();
+	//for (var i = World.objects.length; i--;) {
+	//	var par = World.objects[i];
+	//	for (var j = i; j--;) {
+	//		var opar = World.objects[j],
+	//			rv = par.coords.copy().subtract(opar.coords),
+	//			r2 = rv.dot(rv);
+	//		if (r2) {
+	//			var d2 = (par.radius + opar.radius) * (par.radius + opar.radius),
+	//				ru = rv.unit();
+	//			if (r2 < d2) {
+	//				if (par.velocity.x || par.velocity.y || opar.velocity.x || opar.velocity.y) {
+	//					var n1d = ru.copy().sMultiply(2 * par.velocity.dot(ru)),
+	//						n2 = ru.copy().sMultiply(opar.velocity.dot(ru)),
+	//						v2 = n1d.copy().sMultiply(par.mass).add(n2.copy().sMultiply(opar.mass - par.mass)).sDivide(opar.mass + par.mass);
 
-						par.velocity.add(v2).add(n2).subtract(n1d);
-						opar.velocity.add(v2).subtract(n2);
-					}
-					var factor = ru.sMultiply((par.radius + opar.radius - Math.sqrt(r2)) / (par.mass + opar.mass));
-					par.coords.add(factor.copy().sMultiply(opar.mass));
-					opar.coords.subtract(factor.sMultiply(par.mass));
-				} else if (r2 !== d2) {
-					par.velocity.subtract(ru.copy().sMultiply(World.G * opar.mass / r2 / World.INTERVALS));
-					opar.velocity.add(ru.sMultiply(World.G * par.mass / r2 / World.INTERVALS));
-				}
-			}
-		}
-		par.coords.add(par.velocity.copy().sDivide(World.INTERVALS));
-		par.velocity.sMultiply(World.smoothness);
-	}
+	//					par.velocity.add(v2).add(n2).subtract(n1d);
+	//					opar.velocity.add(v2).subtract(n2);
+	//				}
+	//				var factor = ru.sMultiply((par.radius + opar.radius - Math.sqrt(r2)) / (par.mass + opar.mass));
+	//				par.coords.add(factor.copy().sMultiply(opar.mass));
+	//				opar.coords.subtract(factor.sMultiply(par.mass));
+	//			} else {
+	//				par.velocity.subtract(ru.copy().sMultiply(World.G * opar.mass / r2 / World.INTERVALS));
+	//				opar.velocity.add(ru.sMultiply(World.G * par.mass / r2 / World.INTERVALS));
+	//			}
+	//		}
+	//	}
+	//	par.coords.add(par.velocity.copy().sDivide(World.INTERVALS));
+	//	par.velocity.sMultiply(World.smoothness);
+	//}
 	if (CONTROLS.keysDown[37]) player.angle -= player.agility / World.INTERVALS;
-	if (CONTROLS.keysDown[38]) player.velocity.add(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.thrust / World.INTERVALS));
+	if (CONTROLS.keysDown[38]) player.acc(new vec2(Math.cos(player.angle), Math.sin(player.angle)).sMultiply(player.thrust / World.INTERVALS));
 	if (CONTROLS.keysDown[39]) player.angle += player.agility / World.INTERVALS;
 	slider.style.right = ((100 * ((player.angle - Math.PI / 2) / 2 / Math.PI % 1 + 1) + 1.3888) % 100) + "%";
 	speedCount.textContent = Math.round(player.velocity.copy().subtract(earth.velocity).mag());
 }
+
 window.onresize = function () {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
@@ -106,7 +188,8 @@ var World = {
 	rebound: -1,
 	objects: [],
 	G: 6.67408E-11,
-	INTERVALS: 60
+	INTERVALS: 60,
+	system: new System()
 };
 var sun = new Particle({
 	radius: 6.95700E8,

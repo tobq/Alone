@@ -131,6 +131,7 @@ function Particle(opts) {
 	this.mass = 4 / 3 * Math.PI * this.radius * this.radius * this.radius * this.density;
 	this.coords = opts.coords || new vec2(500, 500).random();
 	World.objects.push(this);
+	World.system.objects.push(this);
 }
 Particle.prototype.momentum = function () {
 	return this.velocity.copy().sMultiply(this.mass);
